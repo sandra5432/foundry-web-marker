@@ -95,7 +95,8 @@ export function initCanvasListeners() {
       console.log("web-marker | pointerdown links, placementActive:", _placementActive);
       if (_placementActive) {
         _placementActive = false;
-        canvas.app.canvas.style.cursor = "";
+        const board = document.getElementById("board");
+        if (board) board.style.cursor = "";
         openMarkerConfig({ position: pos });
         return;
       }
