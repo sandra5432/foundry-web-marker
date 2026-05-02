@@ -20,7 +20,11 @@ Hooks.on("getSceneControlButtons", (controls) => {
     name: "place-web-marker",
     title: "Web Marker platzieren",
     icon: "fas fa-question-circle",
-    onClick: () => setPlacementActive(true),
+    onClick: () => {
+      console.log("web-marker | onClick gefeuert");
+      setPlacementActive(true);
+      ui.notifications.info("Web Marker: Klicke auf die Karte um den Marker zu platzieren.");
+    },
     button: true
   };
 });

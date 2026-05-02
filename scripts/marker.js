@@ -67,7 +67,9 @@ function showContextMenu(tile, screenX, screenY) {
 let _placementActive = false;
 
 export function setPlacementActive(active) {
+  console.log("web-marker | setPlacementActive:", active);
   _placementActive = active;
+  canvas.app.canvas.style.cursor = active ? "crosshair" : "";
 }
 
 // --- Canvas-Listener ---
@@ -89,8 +91,10 @@ export function initCanvasListeners() {
     if (event.button === 0) {
       const pos = canvas.stage.toLocal(event.global);
 
+      console.log("web-marker | pointerdown links, placementActive:", _placementActive);
       if (_placementActive) {
         _placementActive = false;
+        canvas.app.canvas.style.cursor = "";
         openMarkerConfig({ position: pos });
         return;
       }
