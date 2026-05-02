@@ -1,0 +1,14 @@
+{
+  "id": "web-marker",
+  "title": "Web Marker",
+  "description": "Interaktive ? Marker auf Maps mit URL, Text oder Bildinhalt.",
+  "version": "1.0.0",
+  "compatibility": {
+    "minimum": "13",
+    "verified": "13"
+  },
+  "authors": [{ "name": "Sandra" }],
+  "esmodules": ["scripts/main.js"],
+  "styles": ["styles/module.css"],
+  "templates": ["templates/config-form.hbs"]
+}
