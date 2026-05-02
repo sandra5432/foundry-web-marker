@@ -1,0 +1,41 @@
+<form>
+  <div class="form-group">
+    <label>Inhaltstyp</label>
+    <select name="type" class="wm-type-select">
+      <option value="url"   {{#if (eq type "url")  }}selected{{/if}}>URL</option>
+      <option value="text"  {{#if (eq type "text") }}selected{{/if}}>Text</option>
+      <option value="image" {{#if (eq type "image")}}selected{{/if}}>Bild</option>
+    </select>
+  </div>
+
+  <div class="form-group wm-field" data-type="url">
+    <label>URL</label>
+    <input type="url" name="url-content" value="{{urlContent}}"
+           placeholder="https://de.wikipedia.org/..."/>
+  </div>
+
+  <div class="form-group wm-field" data-type="text" style="display:none">
+    <label>Text</label>
+    <textarea name="text-content" rows="6">{{textContent}}</textarea>
+  </div>
+
+  <div class="form-group wm-field" data-type="image" style="display:none">
+    <label>Bild</label>
+    <div class="form-fields">
+      <input type="text" name="image-content" value="{{imageContent}}"
+             placeholder="modules/web-marker/assets/bild.jpg"/>
+      <button type="button" class="file-picker"
+              data-type="imagevideo"
+              data-target="input[name='image-content']"
+              title="Datei auswählen">
+        <i class="fas fa-file-import"></i>
+      </button>
+    </div>
+  </div>
+
+  <footer class="form-footer flexrow">
+    <button type="submit" class="bright">
+      <i class="fas fa-save"></i> Speichern
+    </button>
+  </footer>
+</form>
