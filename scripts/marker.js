@@ -76,7 +76,7 @@ export function initCanvasListeners() {
   let _hoveredTile = null;
 
   canvas.stage.on("pointermove", (event) => {
-    const pos = event.getLocalPosition(canvas.stage);
+    const pos = canvas.stage.toLocal(event.global);
     const tile = findWebMarkerAt(pos.x, pos.y);
     if (tile !== _hoveredTile) {
       if (_hoveredTile) removeHoverEffect(_hoveredTile);
@@ -87,7 +87,7 @@ export function initCanvasListeners() {
 
   canvas.stage.on("pointerdown", (event) => {
     if (event.button === 0) {
-      const pos = event.getLocalPosition(canvas.stage);
+      const pos = canvas.stage.toLocal(event.global);
 
       if (_placementActive) {
         _placementActive = false;
@@ -102,7 +102,7 @@ export function initCanvasListeners() {
       }
 
     } else if (event.button === 2) {
-      const pos = event.getLocalPosition(canvas.stage);
+      const pos = canvas.stage.toLocal(event.global);
       const tile = findWebMarkerAt(pos.x, pos.y);
       if (tile) {
         showContextMenu(tile, event.clientX, event.clientY);
