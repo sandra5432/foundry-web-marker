@@ -1,0 +1,43 @@
+/* Kontextmenü */
+.web-marker-context-menu {
+  position: fixed;
+  z-index: 10000;
+  background: #1a1a2e;
+  border: 1px solid #f0c040;
+  border-radius: 4px;
+  padding: 4px 0;
+  min-width: 140px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.web-marker-context-menu button {
+  display: block;
+  width: 100%;
+  padding: 6px 14px;
+  background: none;
+  border: none;
+  color: #e8e8e8;
+  text-align: left;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.web-marker-context-menu button:hover {
+  background: rgba(240, 192, 64, 0.2);
+  color: #f0c040;
+}
+
+/* Config Form */
+.web-marker-config .window-content {
+  padding: 12px;
+}
+
+.web-marker-config .form-group {
+  margin-bottom: 10px;
+}
+
+.web-marker-config textarea {
+  resize: vertical;
+  min-height: 80px;
+  width: 100%;
+}
