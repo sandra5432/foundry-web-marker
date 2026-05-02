@@ -69,7 +69,8 @@ let _placementActive = false;
 export function setPlacementActive(active) {
   console.log("web-marker | setPlacementActive:", active);
   _placementActive = active;
-  canvas.app.canvas.style.cursor = active ? "crosshair" : "";
+  const board = document.getElementById("board");
+  if (board) board.style.cursor = active ? "crosshair" : "";
 }
 
 // --- Canvas-Listener ---
