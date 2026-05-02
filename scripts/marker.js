@@ -75,17 +75,28 @@ export function setPlacementActive(active) {
 
 // --- Canvas-Listener ---
 
+const DRAG_THRESHOLD = 6; // Pixel — unter diesem Wert gilt es als Klick
+
 function screenToWorld(clientX, clientY) {
   const board = document.getElementById("board");
   const rect = board.getBoundingClientRect();
   return canvas.stage.toLocal(new PIXI.Point(clientX - rect.left, clientY - rect.top));
 }
 
+// Gespeicherte Listener-Referenzen damit sie bei erneutem canvasReady entfernt werden können
+let _boardPointerHandler = null;
+let _stageHoverHandler   = null;
+
 export function initCanvasListeners() {
+  const board = document.getElementById("board");
   let _hoveredTile = null;
 
-  // Hover: PIXI stage (kein Propagation-Problem bei pointermove)
-  canvas.stage.on("pointermove", (event) => {
+  // Alte Listener entfernen falls canvasReady mehrfach feuert (Szenenwechsel)
+  if (_boardPointerHandler) board?.removeEventListener("pointerdown", _boardPointerHandler, { capture: true });
+  if (_stageHoverHandler)   canvas.stage.off("pointermove", _stageHoverHandler);
+
+  // Hover
+  _stageHoverHandler = (event) => {
     const pos = canvas.stage.toLocal(event.global);
     const tile = findWebMarkerAt(pos.x, pos.y);
     if (tile !== _hoveredTile) {
@@ -93,17 +104,19 @@ export function initCanvasListeners() {
       if (tile) applyHoverEffect(tile);
       _hoveredTile = tile;
     }
-  });
+  };
+  canvas.stage.on("pointermove", _stageHoverHandler);
 
-  // Klick: DOM capture-Phase, feuert vor Foundrys TilesLayer
-  const board = document.getElementById("board");
-  board?.addEventListener("pointerdown", (e) => {
+  // Klick + Drag-Erkennung
+  _boardPointerHandler = (e) => {
     if (e.button !== 0 && e.button !== 2) return;
-    const pos = screenToWorld(e.clientX, e.clientY);
+
+    const downX = e.clientX;
+    const downY = e.clientY;
+    const pos   = screenToWorld(downX, downY);
 
     if (e.button === 0) {
-      console.log("web-marker | board pointerdown, placementActive:", _placementActive, "pos:", pos);
-
+      // Platzierungsmodus: sofort auslösen
       if (_placementActive) {
         _placementActive = false;
         board.style.cursor = "";
@@ -113,11 +126,18 @@ export function initCanvasListeners() {
       }
 
       const tile = findWebMarkerAt(pos.x, pos.y);
-      if (tile) {
-        console.log("web-marker | tile gefunden, öffne Inhalt");
-        handleMarkerClick(tile.document.flags[MODULE_ID]);
-        e.stopPropagation();
-      }
+      if (!tile) return;
+
+      // Drag-Check: erst auf pointerup entscheiden
+      e.stopPropagation();
+      board.addEventListener("pointerup", function onUp(upEvent) {
+        board.removeEventListener("pointerup", onUp, { capture: true });
+        const dx = upEvent.clientX - downX;
+        const dy = upEvent.clientY - downY;
+        if (Math.sqrt(dx * dx + dy * dy) < DRAG_THRESHOLD) {
+          handleMarkerClick(tile.document.flags[MODULE_ID]);
+        }
+      }, { capture: true, once: true });
 
     } else if (e.button === 2) {
       const tile = findWebMarkerAt(pos.x, pos.y);
@@ -126,5 +146,7 @@ export function initCanvasListeners() {
         e.stopPropagation();
       }
     }
-  }, { capture: true });
+  };
+
+  board?.addEventListener("pointerdown", _boardPointerHandler, { capture: true });
 }
