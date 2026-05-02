@@ -56,12 +56,14 @@ class WebMarkerConfig extends foundry.applications.api.ApplicationV2 {
     this._position = options.position ?? { x: 0, y: 0 };
   }
 
-  static DEFAULT_OPTIONS = {
-    id: "web-marker-config",
-    classes: ["web-marker-config"],
-    window: { title: "Web Marker konfigurieren" },
-    position: { width: 420, height: "auto" }
-  };
+  static get DEFAULT_OPTIONS() {
+    return {
+      id: "web-marker-config",
+      classes: ["web-marker-config"],
+      window: { title: "Web Marker konfigurieren" },
+      position: { width: 420 }
+    };
+  }
 
   async _prepareContext() {
     const flags = this._tile?.document.flags[MODULE_ID] ?? {};
