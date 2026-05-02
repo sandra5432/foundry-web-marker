@@ -75,9 +75,16 @@ export function setPlacementActive(active) {
 
 // --- Canvas-Listener ---
 
+function screenToWorld(clientX, clientY) {
+  const board = document.getElementById("board");
+  const rect = board.getBoundingClientRect();
+  return canvas.stage.toLocal(new PIXI.Point(clientX - rect.left, clientY - rect.top));
+}
+
 export function initCanvasListeners() {
   let _hoveredTile = null;
 
+  // Hover: PIXI stage (kein Propagation-Problem bei pointermove)
   canvas.stage.on("pointermove", (event) => {
     const pos = canvas.stage.toLocal(event.global);
     const tile = findWebMarkerAt(pos.x, pos.y);
@@ -88,32 +95,36 @@ export function initCanvasListeners() {
     }
   });
 
-  canvas.stage.on("pointerdown", (event) => {
-    if (event.button === 0) {
-      const pos = canvas.stage.toLocal(event.global);
+  // Klick: DOM capture-Phase, feuert vor Foundrys TilesLayer
+  const board = document.getElementById("board");
+  board?.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0 && e.button !== 2) return;
+    const pos = screenToWorld(e.clientX, e.clientY);
 
-      console.log("web-marker | pointerdown links, placementActive:", _placementActive);
+    if (e.button === 0) {
+      console.log("web-marker | board pointerdown, placementActive:", _placementActive, "pos:", pos);
+
       if (_placementActive) {
         _placementActive = false;
-        const board = document.getElementById("board");
-        if (board) board.style.cursor = "";
+        board.style.cursor = "";
         openMarkerConfig({ position: pos });
+        e.stopPropagation();
         return;
       }
 
       const tile = findWebMarkerAt(pos.x, pos.y);
       if (tile) {
+        console.log("web-marker | tile gefunden, öffne Inhalt");
         handleMarkerClick(tile.document.flags[MODULE_ID]);
-        event.stopPropagation();
+        e.stopPropagation();
       }
 
-    } else if (event.button === 2) {
-      const pos = canvas.stage.toLocal(event.global);
+    } else if (e.button === 2) {
       const tile = findWebMarkerAt(pos.x, pos.y);
       if (tile) {
-        showContextMenu(tile, event.clientX, event.clientY);
-        event.stopPropagation();
+        showContextMenu(tile, e.clientX, e.clientY);
+        e.stopPropagation();
       }
     }
-  });
+  }, { capture: true });
 }
