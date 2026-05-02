@@ -90,10 +90,10 @@ Marker werden als Foundry Tiles auf dem Tile-Layer erstellt. Inhalte werden als 
 
 ## Visuelle Darstellung
 
-- **Icon:** SVG "?" in goldgelb (`#f0c040`) auf dunklem Halbkreis-Hintergrund — RPG-Stil
+- **Icon:** SVG "?" in goldgelb (`#f0c040`) auf halbtransparentem schwarzem Kreis (`rgba(0,0,0,0.5)`)
 - **Größe:** Standard 1 Tile-Einheit, frei skalierbar
 - **Hover-Effekt:** Leichtes Pulsieren oder Aufleuchten via PIXI `pointerover`/`pointerout` Events + Alpha-Tween
-- **Glüh-Effekt:** PIXI `GlowFilter` (dauerhaft schwach, stärker bei Hover)
+- **Glüh-Effekt:** PIXI `GlowFilter` nur bei Hover, sonst kein Effekt
 
 ---
 
