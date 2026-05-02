@@ -3,10 +3,17 @@ import { socketCreateTile, socketUpdateTile } from "./socket.js";
 const MODULE_ID = "web-marker";
 const DEFAULT_SIZE = 100;
 
-function buildFormHTML(currentType, currentContent) {
-  const esc = (s) => String(s).replace(/"/g, "&quot;").replace(/</g, "&lt;");
-  return `
-    <form style="padding:8px 4px">
+export function openMarkerConfig({ tile = null, position = null } = {}) {
+  console.log("web-marker | openMarkerConfig aufgerufen, pos:", position);
+
+  const flags = tile?.document.flags[MODULE_ID] ?? {};
+  const currentType    = flags.type    ?? "url";
+  const currentContent = flags.content ?? "";
+
+  const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+
+  const content = `
+    <form style="padding:4px 0 8px">
       <div class="form-group">
         <label>Inhaltstyp</label>
         <select id="wm-type">
@@ -26,7 +33,7 @@ function buildFormHTML(currentType, currentContent) {
 
       <div id="wm-text-field" class="form-group" style="${currentType !== "text"  ? "display:none" : ""}">
         <label>Text</label>
-        <textarea id="wm-text" rows="4" style="width:100%">${currentType === "text" ? esc(currentContent) : ""}</textarea>
+        <textarea id="wm-text" rows="3" style="width:100%">${currentType === "text" ? esc(currentContent) : ""}</textarea>
       </div>
 
       <div id="wm-image-field" class="form-group" style="${currentType !== "image" ? "display:none" : ""}">
@@ -36,93 +43,55 @@ function buildFormHTML(currentType, currentContent) {
                placeholder="worlds/meine-welt/assets/bild.jpg"
                style="width:100%"/>
       </div>
-
-      <div class="flexrow" style="margin-top:12px;gap:6px">
-        <button type="button" data-action="wm-save" class="bright">
-          <i class="fas fa-save"></i> Speichern
-        </button>
-        <button type="button" data-action="wm-cancel">
-          <i class="fas fa-times"></i> Abbrechen
-        </button>
-      </div>
     </form>`;
-}
 
-class WebMarkerConfig extends foundry.applications.api.ApplicationV2 {
+  new Dialog({
+    title: "Web Marker konfigurieren",
+    content,
+    buttons: {
+      save: {
+        icon: '<i class="fas fa-save"></i>',
+        label: "Speichern",
+        callback: async (html) => {
+          const root = html instanceof HTMLElement ? html : html[0];
+          const type    = root.querySelector("#wm-type")?.value ?? "url";
+          const content = root.querySelector(`#wm-${type}`)?.value ?? "";
+          console.log("web-marker | speichern, type:", type, "content:", content);
 
-  constructor(options = {}) {
-    super(options);
-    this._tile     = options.tile     ?? null;
-    this._position = options.position ?? { x: 0, y: 0 };
-  }
+          const tileData = {
+            texture: { src: "modules/web-marker/assets/question-mark.svg" },
+            width: DEFAULT_SIZE,
+            height: DEFAULT_SIZE,
+            flags: { [MODULE_ID]: { type, content } }
+          };
 
-  static get DEFAULT_OPTIONS() {
-    return {
-      id: "web-marker-config",
-      classes: ["web-marker-config"],
-      window: { title: "Web Marker konfigurieren" },
-      position: { width: 420 }
-    };
-  }
-
-  async _prepareContext() {
-    const flags = this._tile?.document.flags[MODULE_ID] ?? {};
-    return {
-      type:    flags.type    ?? "url",
-      content: flags.content ?? ""
-    };
-  }
-
-  async _renderHTML(context, options) {
-    return buildFormHTML(context.type, context.content);
-  }
-
-  _replaceHTML(result, content, options) {
-    content.innerHTML = result;
-    this._activateListeners(content);
-  }
-
-  _activateListeners(html) {
-    const sel = html.querySelector("#wm-type");
-    sel?.addEventListener("change", () => {
-      ["url", "text", "image"].forEach(t => {
-        const el = html.querySelector(`#wm-${t}-field`);
-        if (el) el.style.display = t === sel.value ? "" : "none";
-      });
-    });
-
-    html.querySelector("[data-action=wm-save]")?.addEventListener("click", async () => {
-      const type    = html.querySelector("#wm-type")?.value ?? "url";
-      const content = html.querySelector(`#wm-${type}`)?.value ?? "";
-      console.log("web-marker | speichern, type:", type, "content:", content);
-
-      const tileData = {
-        texture: { src: "modules/web-marker/assets/question-mark.svg" },
-        width: DEFAULT_SIZE,
-        height: DEFAULT_SIZE,
-        flags: { [MODULE_ID]: { type, content } }
-      };
-
-      if (this._tile) {
-        await socketUpdateTile(
-          this._tile.document.uuid,
-          { flags: { [MODULE_ID]: { type, content } } }
-        );
-      } else {
-        await socketCreateTile({
-          ...tileData,
-          x: this._position.x - DEFAULT_SIZE / 2,
-          y: this._position.y - DEFAULT_SIZE / 2
+          if (tile) {
+            await socketUpdateTile(tile.document.uuid, { flags: { [MODULE_ID]: { type, content } } });
+          } else {
+            await socketCreateTile({
+              ...tileData,
+              x: position.x - DEFAULT_SIZE / 2,
+              y: position.y - DEFAULT_SIZE / 2
+            });
+          }
+        }
+      },
+      cancel: { icon: '<i class="fas fa-times"></i>', label: "Abbrechen" }
+    },
+    default: "save",
+    render: (html) => {
+      const root = html instanceof HTMLElement ? html : html[0];
+      // Fix: Höhe des Dialog-Fensters auf auto setzen damit Buttons sichtbar sind
+      root.closest(".app, .application, .dialog")?.style.setProperty("height", "auto");
+      const sel = root.querySelector("#wm-type");
+      sel?.addEventListener("change", () => {
+        ["url", "text", "image"].forEach(t => {
+          const el = root.querySelector(`#wm-${t}-field`);
+          if (el) el.style.display = t === sel.value ? "" : "none";
         });
-      }
-      this.close();
-    });
+      });
+    }
+  }, { width: 440, height: 260 }).render(true);
 
-    html.querySelector("[data-action=wm-cancel]")?.addEventListener("click", () => this.close());
-  }
-}
-
-export function openMarkerConfig({ tile = null, position = null } = {}) {
-  console.log("web-marker | openMarkerConfig aufgerufen, pos:", position);
-  new WebMarkerConfig({ tile, position }).render(true);
+  console.log("web-marker | Dialog.render(true) aufgerufen");
 }
